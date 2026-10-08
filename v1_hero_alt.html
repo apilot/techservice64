@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Запчасти для тепловозов и дизелей — Техсервис, Маркс · демо-макет · светлый чертёжный</title>
+<meta name="description" content="Демо-макет первого экрана: запчасти ТЭМ, ЧМЭ3, ТГМ, дизели Д49/Д50/Д100. Наличие, цены, счёт в течение рабочего дня.">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex, nofollow">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        paper:      '#FFFFFF',
+        paper2:     '#F6F8FA',
+        ink:        '#18222E',
+        ink2:       '#33414F',
+        mist:       '#5D6E7E',
+        line:       '#D3DCE3',
+        line2:      '#B9C6D0',
+        accent:     '#E5660A',
+        accentdeep: '#C25508',
+        ok:         '#1F8F4E',
+        okdeep:     '#176B3B',
+        oktint:     '#E9F5EE',
+        amberdeep:  '#8C5A14',
+        ambertint:  '#FBF3E4',
+      },
+      fontFamily: {
+        disp: ['"IBM Plex Sans"', 'sans-serif'],
+        body: ['"IBM Plex Sans"', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'monospace'],
+      },
+    },
+  },
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  html { scroll-behavior: smooth; }
+  body { text-rendering: optimizeLegibility; }
+  section[id], footer[id] { scroll-margin-top: 84px; }
+  /* миллиметровка «чертёж» на светлом фоне */
+  .blueprint {
+    background-image:
+      linear-gradient(rgba(24,34,46,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(24,34,46,0.045) 1px, transparent 1px),
+      linear-gradient(rgba(24,34,46,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(24,34,46,0.08) 1px, transparent 1px);
+    background-size: 16px 16px, 16px 16px, 80px 80px, 80px 80px;
+  }
+  /* чертёжные регистрационные метки по углам карточки */
+  .tick { position: absolute; width: 16px; height: 16px; pointer-events: none; }
+  .tick::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 1.5px; background: #B9C6D0; transform: translateY(-50%); }
+  .tick::after  { content: ''; position: absolute; left: 50%; top: 0; height: 100%; width: 1.5px; background: #B9C6D0; transform: translateX(-50%); }
+  .tick-tl { top: -8px; left: -8px; }
+  .tick-tr { top: -8px; right: -8px; }
+  .tick-bl { bottom: -8px; left: -8px; }
+  .tick-br { bottom: -8px; right: -8px; }
+  .pulse { animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  ::selection { background: #E5660A; color: #FFFFFF; }
+  .balance { text-wrap: balance; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body class="bg-paper text-ink font-body antialiased">
+<a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-3 focus:left-3 focus:bg-accent focus:text-white focus:px-4 focus:py-2 focus:rounded font-semibold">К содержанию</a>
+
+<!-- ШАПКА: телефон КРУПНО + CTA -->
+<header class="sticky top-0 z-50 bg-paper/95 backdrop-blur border-b border-line2">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-[52px] lg:h-[72px] gap-3 lg:gap-6">
+      <!-- логотип (текстовый, без бинарных ассетов) -->
+      <a href="#main" class="flex items-center gap-2.5 shrink-0 min-w-0" aria-label="Техсервис — на главную">
+        <span class="flex items-center justify-center w-9 h-9 rounded border-2 border-accent text-accent bg-paper font-mono font-bold text-[15px] shrink-0" aria-hidden="true">ТС</span>
+        <span class="min-w-0">
+          <span class="block font-disp font-bold tracking-tight text-[16px] lg:text-[17px] leading-none">ТЕХСЕРВИС</span>
+          <span class="hidden sm:block mt-0.5 font-mono text-[10.5px] text-mist leading-none">запчасти к тепловозам и дизелям</span>
+        </span>
+      </a>
+      <!-- десктоп-навигация -->
+      <nav class="hidden lg:flex items-center gap-7 text-[14.5px] font-semibold" aria-label="Основное меню">
+        <a href="catalog_alt.html" class="text-ink2 hover:text-accentdeep transition-colors">Каталог</a>
+        <a href="#spec" class="text-ink2 hover:text-accentdeep transition-colors">Наличие</a>
+        <a href="#podbor" class="text-ink2 hover:text-accentdeep transition-colors">Подбор</a>
+        <a href="#rfq" class="text-ink2 hover:text-accentdeep transition-colors">Заявка</a>
+        <a href="#contacts" class="text-ink2 hover:text-accentdeep transition-colors">Контакты</a>
+      </nav>
+      <!-- телефон крупно + CTA -->
+      <div class="flex items-center gap-3 lg:gap-5">
+        <a href="tel:+79370290064" class="text-right leading-none group" spellcheck="false">
+          <span class="block font-mono font-bold text-[15px] sm:text-[17px] lg:text-[20px] tracking-tight text-ink group-hover:text-accentdeep transition-colors">+7 937 029 00 64</span>
+          <span class="hidden lg:block mt-1 font-mono text-[11px] text-mist">заявки и счёт · пн–пт 8:00–17:00</span>
+        </a>
+        <a href="#rfq" class="hidden sm:inline-flex items-center justify-center h-11 px-5 rounded bg-accent text-white font-extrabold text-[14.5px] hover:bg-accentdeep transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper">Запросить счёт</a>
+        <button id="menuBtn" class="lg:hidden flex flex-col justify-center items-center w-11 h-11 gap-[5px] rounded border border-line2 hover:border-accent transition-colors cursor-pointer" aria-expanded="false" aria-controls="mobileMenu" aria-label="Открыть меню">
+          <span class="block w-6 h-[2.5px] rounded-full bg-ink"></span>
+          <span class="block w-6 h-[2.5px] rounded-full bg-ink"></span>
+          <span class="block w-6 h-[2.5px] rounded-full bg-ink"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- мобильное меню: РАБОЧЕЕ, тап-зоны ≥44px -->
+  <div id="mobileMenu" class="lg:hidden hidden border-t border-line2 bg-paper">
+    <nav class="px-4 py-2 flex flex-col" aria-label="Мобильное меню">
+      <a href="catalog_alt.html" class="menu-link py-3 border-b border-line font-semibold min-h-[44px] flex items-center">Каталог запчастей</a>
+      <a href="#spec" class="menu-link py-3 border-b border-line font-semibold min-h-[44px] flex items-center">Наличие на складе</a>
+      <a href="#podbor" class="menu-link py-3 border-b border-line font-semibold min-h-[44px] flex items-center">Подбор по модели</a>
+      <a href="#rfq" class="menu-link py-3 border-b border-line font-semibold min-h-[44px] flex items-center">Запросить счёт</a>
+      <a href="#contacts" class="menu-link py-3 font-semibold min-h-[44px] flex items-center">Контакты</a>
+      <a href="tel:+79370290064" class="menu-link my-3 inline-flex items-center justify-center h-12 rounded border border-line2 font-mono font-bold text-[16px] text-ink min-h-[48px]" spellcheck="false">+7 937 029 00 64</a>
+      <a href="#rfq" class="menu-link mb-3 inline-flex items-center justify-center h-12 rounded bg-accent text-white font-extrabold min-h-[48px]">Запросить счёт</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- HERO: product-first — карточка-«чертёж» на миллиметровке, без фото -->
+<section class="blueprint border-b border-line2 bg-paper">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-14 pb-8 lg:pb-12">
+    <div class="grid lg:grid-cols-[1.08fr_0.92fr] gap-5 lg:gap-12 items-start">
+
+      <!-- левая колонка -->
+      <div class="min-w-0">
+        <p class="font-mono text-[11.5px] sm:text-[12.5px] font-semibold tracking-[0.14em] text-accentdeep mb-2 lg:mb-3">ООО «ТЕХСЕРВИС» · Г. МАРКС · ПОСТАВКИ ДЛЯ ДЕПО И ПРОМПРЕДПРИЯТИЙ</p>
+        <h1 class="font-disp font-bold leading-[1.08] tracking-tight text-[28px] sm:text-[40px] lg:text-[48px] xl:text-[54px] balance">Запчасти для тепловозов и&nbsp;дизелей&nbsp;— напрямую с&nbsp;наличием на&nbsp;складе</h1>
+        <p class="mt-2 lg:mt-5 text-[14.5px] sm:text-[17px] text-ink2 leading-relaxed max-w-[54ch]">ТЭМ2, ТЭМ18, ЧМЭ3, ТГМ4, дизели Д49, Д50, Д100, силовые агрегаты буровых СА10–30. Реальные цены на сайте, счёт — в течение рабочего дня. Ремонт ТНВД и форсунок.</p>
+
+        <!-- строка-подбор: визуальная, не рабочая -->
+        <div id="podbor" class="mt-4 lg:mt-8 rounded border border-line2 bg-paper/85 p-3 sm:p-4">
+          <label class="block font-mono text-[11px] font-semibold tracking-[0.14em] text-mist mb-1.5 lg:mb-2.5" id="podbor-label">ПОДБОР ПО МОДЕЛИ</label>
+          <div class="overflow-x-auto" role="group" aria-labelledby="podbor-label">
+            <div class="flex gap-2 w-max pr-4">
+              <span class="shrink-0 inline-flex items-center h-9 lg:h-10 px-4 rounded border border-line2 bg-paper font-mono font-semibold text-[13.5px] text-ink2 whitespace-nowrap">ТЭМ2</span>
+              <span class="shrink-0 inline-flex items-center h-9 lg:h-10 px-4 rounded border border-line2 bg-paper font-mono font-semibold text-[13.5px] text-ink2 whitespace-nowrap">ТЭМ18</span>
+              <span class="shrink-0 inline-flex items-center h-9 lg:h-10 px-4 rounded border border-line2 bg-paper font-mono font-semibold text-[13.5px] text-ink2 whitespace-nowrap">ЧМЭ3</span>
+              <span class="shrink-0 inline-flex items-center h-9 lg:h-10 px-4 rounded border border-line2 bg-paper font-mono font-semibold text-[13.5px] text-ink2 whitespace-nowrap">ТГМ4</span>
+              <span class="shrink-0 inline-flex items-center h-9 lg:h-10 px-4 rounded border border-accent/60 bg-accent/10 text-accentdeep font-mono font-semibold text-[13.5px] whitespace-nowrap">Д49</span>
+              <span class="shrink-0 inline-flex items-center h-9 lg:h-10 px-4 rounded border border-line2 bg-paper font-mono font-semibold text-[13.5px] text-ink2 whitespace-nowrap">Д50 · Д100</span>
+              <span class="shrink-0 inline-flex items-center h-9 lg:h-10 px-4 rounded border border-dashed border-line2 text-mist font-mono font-semibold text-[13.5px] whitespace-nowrap">…</span>
+            </div>
+          </div>
+          <p class="mt-2.5 hidden font-mono text-[11.5px] text-mist sm:block">Поиск по чертёжному номеру и каталогу 55+ товарных групп — в демо показано выборочно.</p>
+        </div>
+
+        <!-- CTA героя -->
+        <div class="mt-4 lg:mt-6 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+          <a href="#rfq" class="inline-flex items-center justify-center h-11 min-h-[44px] lg:h-[52px] px-7 rounded bg-accent text-white font-extrabold text-[15px] sm:text-[16px] hover:bg-accentdeep transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper">Запросить счёт</a>
+          <a href="#spec" class="inline-flex items-center justify-center h-11 min-h-[44px] lg:h-[52px] px-7 rounded border-2 border-line2 font-bold text-[15px] sm:text-[16px] text-ink hover:border-accent hover:text-accentdeep transition-colors cursor-pointer">Смотреть наличие</a>
+          <a href="catalog_alt.html" class="inline-flex items-center justify-center h-11 min-h-[44px] lg:h-[52px] px-7 rounded border-2 border-line2 font-bold text-[15px] sm:text-[16px] text-ink hover:border-accent hover:text-accentdeep transition-colors cursor-pointer">Каталог запчастей</a>
+        </div>
+      </div>
+
+      <!-- карточка-«чертёж»: реальная позиция с сайта -->
+      <aside id="spec" class="w-full max-w-[460px] mx-auto lg:mx-0 lg:justify-self-end min-w-0 scroll-mt-24">
+        <div class="relative">
+          <span class="tick tick-tl" aria-hidden="true"></span>
+          <span class="tick tick-tr" aria-hidden="true"></span>
+          <span class="tick tick-bl" aria-hidden="true"></span>
+          <span class="tick tick-br" aria-hidden="true"></span>
+          <p class="hidden lg:block font-mono text-[10.5px] text-mist tracking-[0.14em] text-right mb-2">ДЕМО-ЛИСТ · М 1:1</p>
+          <div class="rounded-lg border border-line2 bg-paper shadow-[0_10px_34px_rgba(24,34,46,0.14)] overflow-hidden">
+            <div class="bg-ink text-white px-4 py-2 flex items-center justify-between gap-3">
+              <span class="font-mono text-[11.5px] font-bold tracking-[0.12em]">СПЕЦПРЕДЛОЖЕНИЕ ДНЯ</span>
+              <span class="flex items-center gap-2 font-mono text-[11.5px] font-bold tracking-[0.08em]"><span class="w-2 h-2 rounded-[1px] bg-accent pulse" aria-hidden="true"></span>СКЛАД · МАРКС</span>
+            </div>
+            <div class="p-3.5 sm:p-5">
+              <div class="flex items-start justify-between gap-3">
+                <h2 class="font-disp font-bold text-[19px] sm:text-[22px] leading-snug min-w-0">Насос топливный Д49.107спч4</h2>
+                <span class="shrink-0 inline-flex items-center h-7 px-2.5 rounded bg-oktint border border-ok/50 text-okdeep font-mono font-bold text-[11px] tracking-wide">В НАЛИЧИИ</span>
+              </div>
+              <dl class="mt-2.5 sm:mt-4 space-y-1.5 text-[13.5px]">
+                <div class="flex justify-between gap-4 border-b border-line pb-1.5">
+                  <dt class="text-mist">Дизель</dt><dd class="font-mono font-semibold text-ink">Д49</dd>
+                </div>
+                <div class="flex justify-between gap-4 border-b border-line pb-1.5">
+                  <dt class="text-mist">Применение</dt><dd class="font-mono font-semibold text-ink text-right">тепловозные серии</dd>
+                </div>
+                <div class="flex justify-between gap-4 border-b border-line pb-1.5">
+                  <dt class="text-mist">Категория</dt><dd class="font-mono font-semibold text-ink">топливная аппаратура</dd>
+                </div>
+              </dl>
+              <div class="mt-3 sm:mt-4 flex items-end justify-between gap-3">
+                <div>
+                  <p class="font-mono text-[11px] tracking-[0.12em] text-mist">ЦЕНА — ИЗ КАТАЛОГА</p>
+                  <p class="font-disp font-bold text-[28px] sm:text-[32px] leading-none mt-1 tabular-nums text-ink">30 000 <span class="text-[19px]">₽</span></p>
+                </div>
+                <a href="#rfq" class="inline-flex items-center justify-center h-11 min-h-[44px] px-5 rounded bg-accent text-white font-extrabold text-[14px] hover:bg-accentdeep transition-colors cursor-pointer whitespace-nowrap">Запросить счёт</a>
+              </div>
+
+              <!-- мини-выборка реальных позиций -->
+              <p class="mt-4 sm:mt-5 mb-2 font-mono text-[11px] font-semibold tracking-[0.14em] text-mist">ЕЩЁ СО СКЛАДА · ЦЕНЫ — ИЗ КАТАЛОГА</p>
+              <ul class="divide-y divide-line border border-line2 rounded overflow-hidden">
+                <li class="flex items-center justify-between gap-2 px-3 py-2.5 bg-paper2/70">
+                  <span class="text-[13px] font-semibold min-w-0 truncate text-ink2">Помпа 2Д100.32.010</span>
+                  <span class="shrink-0 font-mono font-bold text-[13px] tabular-nums text-ink">20 000 ₽</span>
+                </li>
+                <li class="flex items-center justify-between gap-2 px-3 py-2.5 bg-paper2/70">
+                  <span class="text-[13px] font-semibold min-w-0 truncate text-ink2">Клапан<span class="hidden sm:inline"> нагнетательный</span> Д50.27.102-3</span>
+                  <span class="shrink-0 font-mono font-bold text-[13px] tabular-nums text-ink">2 000 ₽</span>
+                </li>
+                <li class="flex items-center justify-between gap-2 px-3 py-2.5 bg-paper2/70">
+                  <span class="text-[13px] font-semibold min-w-0 truncate text-ink2"><span class="sm:hidden">Плунжер</span><span class="hidden sm:inline">Плунжерная пара</span> 40Д107.4спч2</span>
+                  <span class="shrink-0 inline-flex items-center gap-1.5"><span class="inline-flex items-center h-6 px-2 rounded border border-dashed border-amberdeep/60 bg-ambertint text-amberdeep font-mono font-bold text-[10px] tracking-wide">ПОД ЗАКАЗ</span><span class="font-mono font-bold text-[13px] tabular-nums text-ink">3 500 ₽</span></span>
+                </li>
+              </ul>
+              <p class="mt-3 font-mono text-[11.5px] text-mist">Всего в каталоге 55+ товарных групп · ремонт ТНВД и форсунок · отгрузка по РФ</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- trust-полоса -->
+    <div class="mt-8 lg:mt-10 grid grid-cols-1 sm:grid-cols-3 gap-y-2.5 sm:gap-4 border border-line2 rounded bg-paper/85 px-4 py-3.5">
+      <p class="flex items-center gap-2.5 font-mono text-[12.5px] sm:text-[13px] font-semibold text-ink2"><span class="w-1.5 h-1.5 rounded-[1px] bg-accent shrink-0" aria-hidden="true"></span>55+ товарных групп</p>
+      <p class="flex items-center gap-2.5 font-mono text-[12.5px] sm:text-[13px] font-semibold text-ink2"><span class="w-1.5 h-1.5 rounded-[1px] bg-accent shrink-0" aria-hidden="true"></span>Ремонт ТНВД и форсунок</p>
+      <p class="flex items-center gap-2.5 font-mono text-[12.5px] sm:text-[13px] font-semibold text-ink2"><span class="w-1.5 h-1.5 rounded-[1px] bg-accent shrink-0" aria-hidden="true"></span>Отгрузка по РФ</p>
+    </div>
+  </div>
+</section>
+
+<!-- RFQ: заявка → счёт в течение рабочего дня -->
+<section id="rfq" class="border-b border-line2 bg-paper2">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+    <div class="grid lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-12 items-start">
+      <div class="min-w-0">
+        <p class="font-mono text-[11.5px] sm:text-[12.5px] font-semibold tracking-[0.14em] text-accentdeep mb-3">ПРАЙС И СЧЁТ — В ТЕЧЕНИЕ РАБОЧЕГО ДНЯ</p>
+        <h2 class="font-disp font-bold text-[24px] sm:text-[32px] leading-tight tracking-tight balance">Пришлите заявку — счёт с&nbsp;ценой и сроком в&nbsp;течение рабочего дня</h2>
+        <ul class="mt-5 space-y-2.5 text-[14.5px] sm:text-[15px] text-ink2 font-semibold">
+          <li class="flex items-start gap-3"><svg class="w-5 h-5 mt-0.5 text-accentdeep shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Подберём по модели или чертёжному номеру — ТЭМ, ЧМЭ3, ТГМ, <span class="whitespace-nowrap">Д49/Д50/Д100</span></li>
+          <li class="flex items-start gap-3"><svg class="w-5 h-5 mt-0.5 text-accentdeep shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Предложим наличие со склада или срок под заказ</li>
+          <li class="flex items-start gap-3"><svg class="w-5 h-5 mt-0.5 text-accentdeep shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Ремонт ТНВД и форсунок, настройка регуляторов оборотов</li>
+        </ul>
+        <p class="mt-6 text-[13.5px] text-ink2">Быстрее по телефону:
+          <a href="tel:+79370290064" class="font-mono font-bold text-ink hover:text-accentdeep transition-colors text-[15px] align-middle" spellcheck="false">+7 937 029 00 64</a>
+        </p>
+      </div>
+
+      <!-- форма: не отправляет данные + честная пометка -->
+      <form class="rounded-lg border border-line2 bg-paper p-5 sm:p-6 shadow-[0_6px_22px_rgba(24,34,46,0.10)]" onsubmit="return false" aria-describedby="rfq-demo-note">
+        <h3 class="font-disp font-bold text-[19px] sm:text-[20px]">Отправить заявку</h3>
+        <p class="mt-1 font-mono text-[12px] text-mist">Ответим в рабочее время, приложим цены и сроки по позициям.</p>
+        <div class="mt-4 space-y-3.5">
+          <div>
+            <label for="ts-org" class="block font-mono text-[12px] font-bold mb-1.5">Организация и имя</label>
+            <input id="ts-org" name="org" type="text" autocomplete="organization" class="w-full h-12 min-h-[44px] px-4 rounded border border-line2 bg-paper font-mono text-[14px] text-ink focus:border-accent focus:outline-none transition-colors placeholder:text-line2" placeholder="ООО «Депо», Сергей">
+          </div>
+          <div>
+            <label for="ts-tel" class="block font-mono text-[12px] font-bold mb-1.5">Телефон</label>
+            <input id="ts-tel" name="tel" type="tel" inputmode="tel" autocomplete="tel" spellcheck="false" class="w-full h-12 min-h-[44px] px-4 rounded border border-line2 bg-paper font-mono text-[14px] text-ink focus:border-accent focus:outline-none transition-colors placeholder:text-line2" placeholder="+7 ___ ___-__-__">
+          </div>
+          <div>
+            <label for="ts-msg" class="block font-mono text-[12px] font-bold mb-1.5">Что нужно</label>
+            <textarea id="ts-msg" name="message" rows="2" class="w-full px-4 py-3 rounded border border-line2 bg-paper font-mono text-[14px] text-ink focus:border-accent focus:outline-none transition-colors resize-none placeholder:text-line2" placeholder="Модель или чертёжный номер, например: плунжерная пара Д49"></textarea>
+          </div>
+          <button type="submit" class="w-full h-13 min-h-[48px] rounded bg-accent text-white font-extrabold text-[15.5px] hover:bg-accentdeep transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-paper">Отправить заявку</button>
+        </div>
+        <p id="rfq-demo-note" class="mt-3 font-mono text-[11px] text-mist leading-snug">Демо-макет: форма не отправляет данные. В рабочей версии — заявка на почту sales@techservice64.ru и уведомление в мессенджер.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ФУТЕР: маркировка демо + контакты -->
+<footer id="contacts" class="bg-paper border-t-2 border-ink">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="min-w-0">
+        <p class="font-disp font-bold text-[15px]">ООО «Техсервис» · г. Маркс, Саратовская обл.</p>
+        <p class="mt-1 text-[13px] text-ink2"><a href="mailto:sales@techservice64.ru" class="hover:text-accentdeep transition-colors">sales@techservice64.ru</a> · <a href="tel:+79370290064" class="font-mono font-semibold hover:text-accentdeep transition-colors" spellcheck="false">+7 937 029 00 64</a></p>
+      </div>
+      <p class="font-mono text-[12px] text-mist sm:text-right">Запчасти к тепловозам и дизелям.<br>Ремонт ТНВД и форсунок.</p>
+    </div>
+    <div class="mt-6 pt-4 border-t border-line flex flex-wrap items-center justify-between gap-2">
+      <p class="font-mono text-[11px] text-mist tracking-wider">ДЕМО-МАКЕТ V1 · СВЕТЛЫЙ ЧЕРТЁЖНЫЙ · НЕ ПУБЛИКАЦИЯ</p>
+      <p class="font-mono text-[11.5px] text-mist">Макет для обсуждения редизайна · 08.10.2026</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var btn=document.getElementById('menuBtn'),menu=document.getElementById('mobileMenu');
+  function close(){menu.classList.add('hidden');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+  btn.addEventListener('click',function(){
+    var open=menu.classList.toggle('hidden')===false;
+    btn.setAttribute('aria-expanded',open?'true':'false');
+    document.body.style.overflow=open?'hidden':'';
+  });
+  menu.querySelectorAll('a').forEach(function(a){a.addEventListener('click',close);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+  window.matchMedia('(min-width: 1024px)').addEventListener('change',function(m){if(m.matches)close();});
+})();
+</script>
+</body>
+</html>

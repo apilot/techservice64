@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ТехСервис · демо-редизайн — варианты</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Нейтральный светлый хаб: белый/#F4F5F7, тёмно-серый текст, один акцент #2563EB (ссылки) */
+  :root{
+    --bg:#F4F5F7; --card:#FFFFFF; --text:#1F2937; --muted:#6B7280; --accent:#2563EB;
+    --shadow:0 8px 30px rgba(0,0,0,.16);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{max-width:100%;overflow-x:hidden}
+  body{
+    font-family:'Montserrat',system-ui,-apple-system,sans-serif;
+    background:var(--bg);color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:40px 20px 32px}
+
+  /* Header */
+  .hub-header{text-align:center;margin-bottom:36px}
+  .hub-header h1{font-size:clamp(22px,3.4vw,32px);font-weight:800;letter-spacing:-.01em;line-height:1.2}
+  .hub-header .sub{margin-top:10px;font-size:14px;font-weight:500;color:var(--muted)}
+
+  /* Grid: 1 колонка → 2×2 на десктопе */
+  .grid{display:grid;grid-template-columns:1fr;gap:24px}
+  @media (min-width:768px){ .grid{grid-template-columns:repeat(2,1fr)} }
+
+  /* Card */
+  .variant-card{
+    background:var(--card);border-radius:16px;box-shadow:var(--shadow);
+    padding:26px 26px 24px;display:flex;flex-direction:column;gap:16px;
+    min-width:0;
+  }
+  .card-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .variant-name{font-size:21px;font-weight:800;letter-spacing:.02em}
+  .badge{
+    display:inline-block;background:var(--accent);color:#fff;
+    font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;
+  }
+  .variant-desc{font-size:14px;font-weight:500;color:var(--muted);line-height:1.5}
+
+  /* Swatches */
+  .swatches{display:flex;flex-wrap:wrap;gap:14px;min-width:0}
+  .swatch{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .swatch i{
+    display:block;width:32px;height:32px;border-radius:8px;
+    border:1px solid rgba(0,0,0,.12);
+  }
+  .swatch span{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.03em}
+
+  /* Кнопки-ссылки: тап-зоны ≥44px */
+  .links{display:flex;flex-wrap:wrap;gap:12px;margin-top:auto;padding-top:4px}
+  .btn{
+    flex:1 1 150px;display:inline-flex;align-items:center;justify-content:center;
+    min-height:44px;padding:10px 16px;border-radius:10px;
+    font-family:inherit;font-size:14px;font-weight:700;text-decoration:none;
+    transition:filter .15s ease,background .15s ease;
+  }
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{filter:brightness(1.08)}
+  .btn-secondary{border:2px solid var(--accent);color:var(--accent);background:transparent}
+  .btn-secondary:hover{background:rgba(37,99,235,.08)}
+
+  /* Footer */
+  .hub-footer{margin-top:40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .hub-footer .note{font-size:13px;font-weight:500;color:var(--muted)}
+  .mark{
+    display:inline-block;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);border:1px dashed #9CA3AF;border-radius:8px;padding:8px 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hub-header">
+    <h1>ТехСервис · демо-редизайн — варианты</h1>
+    <p class="sub">техservice64.ru · ООО «ТЕХСЕРВИС», г. Маркс · 08.10.2026</p>
+  </header>
+
+  <main class="grid" id="variants-grid">
+
+    <!-- 1. PRO -->
+    <article class="variant-card">
+      <div class="card-head">
+        <span class="variant-name">PRO</span>
+        <span class="badge">Рекомендация</span>
+      </div>
+      <p class="variant-desc">их бренд × конверсионный паттерн</p>
+      <div class="swatches">
+        <span class="swatch"><i style="background:#0074C2"></i><span>#0074C2</span></span>
+        <span class="swatch"><i style="background:#FFFFFF"></i><span>#FFFFFF</span></span>
+        <span class="swatch"><i style="background:#F8F9FA"></i><span>#F8F9FA</span></span>
+        <span class="swatch"><i style="background:#28A745"></i><span>#28A745</span></span>
+      </div>
+      <div class="links">
+        <a class="btn btn-primary" href="v1_hero_pro.html">Первый экран →</a>
+        <a class="btn btn-secondary" href="catalog_pro.html">Каталог →</a>
+      </div>
+    </article>
+
+    <!-- 2. LIGHT -->
+    <article class="variant-card">
+      <div class="card-head">
+        <span class="variant-name">LIGHT</span>
+      </div>
+      <p class="variant-desc">светлый эволюционный: их сайт, только конвертирующий</p>
+      <div class="swatches">
+        <span class="swatch"><i style="background:#0074C2"></i><span>#0074C2</span></span>
+        <span class="swatch"><i style="background:#F8F9FA"></i><span>#F8F9FA</span></span>
+        <span class="swatch"><i style="background:#28A745"></i><span>#28A745</span></span>
+        <span class="swatch"><i style="background:#FFC107"></i><span>#FFC107</span></span>
+      </div>
+      <div class="links">
+        <a class="btn btn-primary" href="v1_hero_light.html">Первый экран →</a>
+        <a class="btn btn-secondary" href="catalog_light.html">Каталог →</a>
+      </div>
+    </article>
+
+    <!-- 3. ALT -->
+    <article class="variant-card">
+      <div class="card-head">
+        <span class="variant-name">ALT</span>
+      </div>
+      <p class="variant-desc">светлый чертёжный: precision для снабженцев</p>
+      <div class="swatches">
+        <span class="swatch"><i style="background:#18222E"></i><span>#18222E</span></span>
+        <span class="swatch"><i style="background:#FFFFFF"></i><span>#FFFFFF</span></span>
+        <span class="swatch"><i style="background:#E5660A"></i><span>#E5660A</span></span>
+      </div>
+      <div class="links">
+        <a class="btn btn-primary" href="v1_hero_alt.html">Первый экран →</a>
+        <a class="btn btn-secondary" href="catalog_alt.html">Каталог →</a>
+      </div>
+    </article>
+
+    <!-- 4. DARK -->
+    <article class="variant-card">
+      <div class="card-head">
+        <span class="variant-name">DARK</span>
+      </div>
+      <p class="variant-desc">тёмный индустриальный</p>
+      <div class="swatches">
+        <span class="swatch"><i style="background:#101418"></i><span>#101418</span></span>
+        <span class="swatch"><i style="background:#1F2630"></i><span>#1F2630</span></span>
+        <span class="swatch"><i style="background:#E5660A"></i><span>#E5660A</span></span>
+      </div>
+      <div class="links">
+        <a class="btn btn-primary" href="v1_hero.html">Первый экран →</a>
+        <a class="btn btn-secondary" href="catalog_dark.html">Каталог →</a>
+      </div>
+    </article>
+
+  </main>
+
+  <footer class="hub-footer">
+    <p class="note">Письмо и comparison собираются на выбранной паре · выбор — владелец</p>
+    <span class="mark">Демо-макет · не публикация</span>
+  </footer>
+
+</div>
+</body>
+</html>

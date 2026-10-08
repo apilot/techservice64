@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Каталог запчастей — Техсервис, Маркс · демо-макет</title>
+<meta name="description" content="Демо-макет страницы каталога: запчасти для дизелей Д49/Д50/Д100, топливная аппаратура, запчасти для тепловозов. Цены из каталога, счёт в течение рабочего дня.">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex, nofollow">
+<!--
+  catalog_alt.html — страница каталога (листинг), светлая чертёжная серия. Пара к v1_hero_alt.html.
+  Структура/данные/интерактив 1:1 с catalog_pro.html: 36 реальных позиций с ценами из
+  /tmp/opencode/ts64/products.json (curl 08.10.2026); статусы «В НАЛИЧИИ/ПОД ЗАКАЗ» — паттерн.
+  Дизайн: токены v1_hero_alt — миллиметровка blueprint, тушь #18222E, IBM Plex Sans/Mono,
+  акцент #E5660A (hover #C25508), пунктирные бейджи «ПОД ЗАКАЗ», статусы #1F8F4E /
+  #8C5A14+#FBF3E4, бордеры #D3DCE3. Tailwind CDN+inline, self-contained.
+  Джокер: «Купить»/корзина заменена на RFQ «Запросить счёт».
+  Кросс-ссылки: крошки/лого → v1_hero_alt.html, из hero «Каталог» → catalog_alt.html.
+  Демо: поиск/фильтры работают на клиенте, данные никуда не отправляются. НЕ ПУБЛИКАЦИЯ.
+-->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        paper:      '#FFFFFF',
+        paper2:     '#F6F8FA',
+        paper3:     '#F6F8FA',
+        ink:        '#18222E',
+        ink2:       '#33414F',
+        gray:       '#5D6E7E',
+        line:       '#D3DCE3',
+        line2:      '#B9C6D0',
+        blue:       '#E5660A',
+        bluedeep:   '#C25508',
+        ok:         '#1F8F4E',
+        okdeep:     '#176B3B',
+        oktint:     '#E9F5EE',
+        amber:      '#E9A83C',
+        amberdeep:  '#8C5A14',
+        ambertint:  '#FBF3E4',
+      },
+       
+      fontFamily: {
+        disp: ['"IBM Plex Sans"', 'sans-serif'],
+        body: ['"IBM Plex Sans"', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'monospace'],
+      },
+    },
+  },
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  html { scroll-behavior: smooth; }
+  body { text-rendering: optimizeLegibility; }
+  ::selection { background: #E5660A; color: #FFFFFF; }
+  .balance { text-wrap: balance; }
+
+  /* видимый фокус для клавиатурной навигации (чек-лист a11y) */
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2.5px solid #E5660A; outline-offset: 2px;
+  }
+
+  /* якоря под sticky-шапкой и (на мобайле) под sticky-панелью подбора */
+  #cat-top, #podbor, #rfq { scroll-margin-top: 88px; }
+  @media (max-width: 1023.98px) { #cat-top { scroll-margin-top: 64px; } #rfq { scroll-margin-top: 158px; } }
+
+  /* активный чип категории */
+  .chip-on { border-color: rgba(229,102,10,.6) !important; background: rgba(229,102,10,.10); color: #C25508; }
+
+  /* скрытие карточек фильтром */
+  .p-hide { display: none !important; }
+
+  /* глубина карточек: lift + усиление тени, только transform/box-shadow — без layout-shift */
+  .card-lift { transition: transform 250ms ease, box-shadow 250ms ease; }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .card-lift:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0,0,0,0.20); }
+  }
+
+  
+  /* миллиметровка «чертёж» на светлом фоне — как в v1_hero_alt */
+  .blueprint {
+    background-image:
+      linear-gradient(rgba(24,34,46,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(24,34,46,0.045) 1px, transparent 1px),
+      linear-gradient(rgba(24,34,46,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(24,34,46,0.08) 1px, transparent 1px);
+    background-size: 16px 16px, 16px 16px, 80px 80px, 80px 80px;
+  }
+
+  /* пунктирные бейджи «ПОД ЗАКАЗ» — как в v1_hero_alt */
+  .p-card .bg-ambertint { border-style: dashed; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body class="bg-paper text-ink font-body antialiased">
+<a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-3 focus:left-3 focus:bg-blue focus:text-white focus:px-4 focus:py-2 focus:rounded font-semibold">К содержанию</a>
+
+<!-- ШАПКА sticky: лого-текст, телефон (tel:) + CTA «Запросить счёт», рабочий бургер на mobile -->
+<header class="sticky top-0 z-50 bg-paper/95 backdrop-blur border-b border-line shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-[52px] lg:h-[72px] gap-3 lg:gap-6">
+      <a href="v1_hero_alt.html" class="flex items-center gap-2.5 shrink-0 min-w-0 cursor-pointer" aria-label="Техсервис — на главную">
+        <span class="flex items-center justify-center w-9 h-9 rounded bg-blue text-white font-mono font-bold text-[15px] shrink-0" aria-hidden="true">ТС</span>
+        <span class="min-w-0">
+          <span class="block font-disp font-extrabold tracking-tight text-[16px] lg:text-[17px] leading-none">ТЕХСЕРВИС</span>
+          <span class="hidden sm:block mt-0.5 text-[11px] text-gray leading-none">запчасти · каталог</span>
+        </span>
+      </a>
+      <nav class="hidden lg:flex items-center gap-7 text-[14.5px] font-semibold" aria-label="Основное меню">
+        <a href="#cat-top" class="text-blue cursor-pointer" aria-current="page">Каталог</a>
+        <a href="#podbor" class="text-ink2 hover:text-blue transition-colors duration-200 cursor-pointer">Подбор</a>
+        <a href="#rfq" class="text-ink2 hover:text-blue transition-colors duration-200 cursor-pointer">Заявка</a>
+        <a href="#contacts" class="text-ink2 hover:text-blue transition-colors duration-200 cursor-pointer">Контакты</a>
+      </nav>
+      <div class="flex items-center gap-3 lg:gap-5">
+        <a href="tel:+79370290064" class="flex items-center gap-2 text-right leading-none group cursor-pointer" spellcheck="false">
+          <svg class="hidden lg:block w-[18px] h-[18px] text-blue shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>
+            <span class="block font-mono font-bold text-[15px] sm:text-[17px] lg:text-[20px] tracking-tight text-bluedeep group-hover:text-blue transition-colors duration-200">+7 937 029 00 64</span>
+            <span class="hidden lg:block mt-1 text-[11px] text-gray">заявки и счёт · пн–пт 8:00–17:00</span>
+          </span>
+        </a>
+        <a href="#rfq" class="hidden sm:inline-flex items-center justify-center gap-2 h-11 px-5 rounded bg-blue text-white font-extrabold text-[14.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        <button id="menuBtn" class="lg:hidden flex flex-col justify-center items-center w-11 h-11 gap-[5px] rounded border border-line hover:border-blue transition-colors duration-200 cursor-pointer" aria-expanded="false" aria-controls="mobileMenu" aria-label="Открыть меню">
+          <span class="block w-6 h-[2.5px] rounded-full bg-ink"></span>
+          <span class="block w-6 h-[2.5px] rounded-full bg-ink"></span>
+          <span class="block w-6 h-[2.5px] rounded-full bg-ink"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- мобильное меню: РАБОЧЕЕ, тап-зоны ≥44px -->
+  <div id="mobileMenu" class="lg:hidden hidden border-t border-line bg-paper">
+    <nav class="px-4 py-2 flex flex-col" aria-label="Мобильное меню">
+      <a href="#cat-top" class="menu-link py-3 border-b border-line font-semibold min-h-[44px] flex items-center cursor-pointer">Каталог запчастей</a>
+      <a href="#podbor" class="menu-link py-3 border-b border-line font-semibold min-h-[44px] flex items-center cursor-pointer">Подбор по артикулу</a>
+      <a href="#rfq" class="menu-link py-3 border-b border-line font-semibold min-h-[44px] flex items-center cursor-pointer">Запросить счёт</a>
+      <a href="#contacts" class="menu-link py-3 font-semibold min-h-[44px] flex items-center cursor-pointer">Контакты</a>
+      <a href="tel:+79370290064" class="menu-link my-3 inline-flex items-center justify-center h-12 rounded border border-line font-mono font-bold text-[16px] text-bluedeep min-h-[48px] cursor-pointer" spellcheck="false">+7 937 029 00 64</a>
+      <a href="#rfq" class="menu-link mb-3 inline-flex items-center justify-center h-12 rounded bg-blue text-white font-extrabold min-h-[48px] cursor-pointer">Запросить счёт</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ХЛЕБНЫЕ КРОШКИ + ЗАГОЛОВОК КАТЕГОРИИ + СЧЁТЧИК -->
+<section id="cat-top" class="bg-paper">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8">
+    <nav aria-label="Хлебные крошки">
+      <ol class="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-[12.5px] text-gray min-w-0">
+        <li><a href="v1_hero_alt.html" class="hover:text-blue transition-colors duration-200 cursor-pointer">Главная</a></li>
+        <li class="flex items-center gap-1.5" id="crumbMid"><svg class="w-3.5 h-3.5 text-line shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 18 6-6-6-6"/></svg><a href="#cat-top" class="hover:text-blue transition-colors duration-200 cursor-pointer">Каталог</a></li>
+        <li class="flex items-center gap-1.5 min-w-0"><svg class="w-3.5 h-3.5 text-line shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 18 6-6-6-6"/></svg><span id="crumbCat" aria-current="page" class="font-semibold text-ink2 truncate">Каталог</span></li>
+      </ol>
+    </nav>
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-1.5 lg:gap-6 pb-4 lg:pb-6 pt-2.5 lg:pt-4">
+      <div class="min-w-0">
+        <h1 id="catTitle" class="font-disp font-extrabold tracking-tight leading-tight text-[26px] sm:text-[34px] lg:text-[38px] balance">Каталог запчастей</h1>
+        <p id="catCount" aria-live="polite" class="mt-1.5 text-[13.5px] sm:text-[14.5px] text-ink2">36 позиций · цены из каталога</p>
+      </div>
+      <p class="hidden lg:flex items-center gap-2 text-[13px] text-gray shrink-0 pb-1"><svg class="w-4 h-4 text-blue shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>цены и наличие — из каталога · отгрузка по РФ</p>
+    </div>
+  </div>
+</section>
+
+<!-- ПАНЕЛЬ ПОДБОРА: поиск по артикулу/названию + чипы категорий. На mobile — sticky под шапкой -->
+<section id="podbor" class="sticky top-[52px] z-40 lg:static border-b border-line bg-paper/95 backdrop-blur">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 lg:py-5">
+    <div class="flex flex-col lg:flex-row lg:items-center gap-2.5 lg:gap-4">
+      <label for="tsSearch" class="sr-only">Поиск по артикулу и модели</label>
+      <div class="relative flex-1 min-w-0">
+        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="tsSearch" type="search" placeholder="Артикул или модель: Д49, ТЭМ2…" spellcheck="false"
+          class="w-full h-11 lg:h-12 pl-11 pr-4 rounded border border-line bg-paper font-mono text-[14px] text-ink placeholder:text-gray focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20 transition duration-200 cursor-pointer">
+      </div>
+      <div class="flex items-center gap-2.5 shrink-0">
+        <label for="tsSort" class="hidden lg:block text-[13px] font-semibold text-gray whitespace-nowrap">Сортировка:</label>
+        <select id="tsSort" class="h-11 lg:h-12 rounded border border-line bg-paper px-3 font-semibold text-[13.5px] text-ink2 hover:border-blue transition-colors duration-200 cursor-pointer focus:outline-none">
+          <option value="name">По названию</option>
+          <option value="asc">Сначала дешевле</option>
+          <option value="desc">Сначала дороже</option>
+        </select>
+      </div>
+    </div>
+    <div class="mt-2.5 lg:mt-4 overflow-x-auto" role="group" aria-label="Категории каталога">
+      <div class="flex gap-2 w-max lg:w-full lg:flex-wrap pr-1">
+              <button type="button" class="chip inline-flex items-center h-10 px-4 rounded border border-line bg-paper font-mono font-semibold text-[13px] text-ink2 whitespace-nowrap hover:border-blue hover:text-blue transition-colors duration-200 cursor-pointer" data-cat="all" aria-pressed="false">Все позиции<span class="ml-1 font-mono text-[11px] opacity-70">36</span></button>
+              <button type="button" class="chip inline-flex items-center h-10 px-4 rounded border border-line bg-paper font-mono font-semibold text-[13px] text-ink2 whitespace-nowrap hover:border-blue hover:text-blue transition-colors duration-200 cursor-pointer" data-cat="disel" aria-pressed="false">Запасные части для дизелей<span class="ml-1 font-mono text-[11px] opacity-70">12</span></button>
+              <button type="button" class="chip inline-flex items-center h-10 px-4 rounded border border-line bg-paper font-mono font-semibold text-[13px] text-ink2 whitespace-nowrap hover:border-blue hover:text-blue transition-colors duration-200 cursor-pointer" data-cat="toplivnaya" aria-pressed="false">Топливная аппаратура<span class="ml-1 font-mono text-[11px] opacity-70">12</span></button>
+              <button type="button" class="chip inline-flex items-center h-10 px-4 rounded border border-line bg-paper font-mono font-semibold text-[13px] text-ink2 whitespace-nowrap hover:border-blue hover:text-blue transition-colors duration-200 cursor-pointer" data-cat="tieplovoza" aria-pressed="false">Запчасти для тепловоза<span class="ml-1 font-mono text-[11px] opacity-70">12</span></button>
+              <button type="button" class="chip inline-flex items-center h-10 px-4 rounded border border-line bg-paper font-mono font-semibold text-[13px] text-ink2 whitespace-nowrap hover:border-blue hover:text-blue transition-colors duration-200 cursor-pointer" data-cat="el" aria-pressed="false" title="В демо-выборке позиций нет — запросите подбор по артикулу">Электро-оборудование</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- СЕТКА ТОВАРОВ: 4 колонки (xl) / 3 (lg) / 2 (sm) / 1 (mobile) -->
+<section class="bg-paper3 border-b border-line blueprint">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-8">
+    <div id="catalogGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4">
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="гидротолкатель д49.78.8спч1" data-art="Д49.78.8спч1" data-price="800">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Гидротолкатель</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д49.78.8спч1</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">800 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="помпа 2д100.32.010" data-art="2Д100.32.010" data-price="20000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Помпа</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">2Д100.32.010</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">20 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="кольцо 8д49.22.04-1" data-art="8Д49.22.04-1" data-price="2600">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Кольцо</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">8Д49.22.04-1</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">2 600 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="втулка вгш 5д49.17.6спч-2" data-art="5Д49.17.6спч-2" data-price="8000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Втулка ВГШ</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">5Д49.17.6спч-2</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">8 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="втулка 6д49.92.36" data-art="6Д49.92.36" data-price="1000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Втулка</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">6Д49.92.36</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">1 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="вал приводной д49.123.2спч" data-art="Д49.123.2спч" data-price="8000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Вал приводной</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д49.123.2спч</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">8 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="насос маслопрокачивающий д67.31.01.00" data-art="д67.31.01.00" data-price="15000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Насос маслопрокачивающий</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">д67.31.01.00</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">15 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="регулятор (рчо) д50.36сб1" data-art="Д50.36сб1" data-price="180000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Регулятор (РЧО)</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-ambertint border border-amber/60 text-amberdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">ПОД ЗАКАЗ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д50.36сб1</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">180 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="вкладыш коренной нижний 2д49.2.06" data-art="2Д49.2.06" data-price="9000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Вкладыш коренной нижний</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">2Д49.2.06</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">9 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="шестерня проходная 1-5д49.69.06-1" data-art="1-5Д49.69.06-1" data-price="25000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Шестерня проходная</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">1-5Д49.69.06-1</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">25 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="колпачок маслосъемный (манжета) 5д49.78.5спч" data-art="5Д49.78.5спч" data-price="500">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Колпачок маслосъёмный (манжета)</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">5Д49.78.5спч</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">500 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="disel" data-name="ролик толкателя д50.27.096" data-art="Д50.27.096" data-price="2000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Ролик толкателя</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д50.27.096</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">2 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="сопловой наконечник д100.17.004.20" data-art="Д100.17.004.20" data-price="520">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Сопловой наконечник</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д100.17.004.20</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">520 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="клапан нагнетательный д50.27.102-3" data-art="Д50.27.102-3" data-price="2000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Клапан нагнетательный</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д50.27.102-3</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">2 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="распылитель д100.17.101сб" data-art="Д100.17.101сб" data-price="1800">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Распылитель</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д100.17.101сб</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">1 800 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="плунжерная пара 40д107.4спч2" data-art="40Д107.4спч2" data-price="3500">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Плунжерная пара</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-ambertint border border-amber/60 text-amberdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">ПОД ЗАКАЗ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">40Д107.4спч2</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">3 500 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="насос топливный д49.107спч4" data-art="Д49.107спч4" data-price="30000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Насос топливный</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д49.107спч4</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">30 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="рейка 03д49.107.04-1" data-art="03Д49.107.04-1" data-price="1000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Рейка</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">03Д49.107.04-1</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">1 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="сопловой наконечник д49.85.05-01" data-art="Д49.85.05-01" data-price="800">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Сопловой наконечник</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д49.85.05-01</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">800 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="клапан нагнетательный 03д49.107.4спч" data-art="03Д49.107.4спч" data-price="2000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Клапан нагнетательный</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">03Д49.107.4спч</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">2 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="распылитель д49.85.1спч1-01" data-art="Д49.85.1спч1-01" data-price="2000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Распылитель</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д49.85.1спч1-01</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">2 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="плунжерная пара д100.27.102сб" data-art="Д100.27.102сб" data-price="1900">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Плунжерная пара</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д100.27.102сб</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">1 900 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="форсунка д49.85спч" data-art="Д49.85спч" data-price="7000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Форсунка</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">Д49.85спч</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">7 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="toplivnaya" data-name="толкатель 1-пд4.27.260" data-art="1-ПД4.27.260" data-price="32000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Толкатель</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-ambertint border border-amber/60 text-amberdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">ПОД ЗАКАЗ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">1-ПД4.27.260</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">32 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="кран концевой 4313" data-art="4313" data-price="7000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Кран концевой</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">4313</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">7 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="диск муфты тэм2.85.60.162" data-art="ТЭМ2.85.60.162" data-price="110">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Диск муфты</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">ТЭМ2.85.60.162</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">110 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="шестерня редуктора 2тэ10л85.23.121-2" data-art="2ТЭ10Л85.23.121-2" data-price="9500">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Шестерня редуктора</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">2ТЭ10Л85.23.121-2</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">9 500 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="кран водоспускной 4332" data-art="4332" data-price="2000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Кран водоспускной</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">4332</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">2 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="редуктор крана 394.090" data-art="394.090" data-price="4000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Редуктор крана</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">394.090</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">4 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="стоп-кран 163" data-art="163" data-price="2000">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Стоп-кран</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">163</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">2 000 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="шестерня редуктора 2тэ10л85.23.132-2" data-art="2ТЭ10Л85.23.132-2" data-price="9500">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Шестерня редуктора</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">2ТЭ10Л85.23.132-2</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">9 500 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="шестерня ведущая 9д100.26.014" data-art="9Д100.26.014" data-price="999999999">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Шестерня ведущая</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-ambertint border border-amber/60 text-amberdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">ПОД ЗАКАЗ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">9Д100.26.014</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[15.5px] text-ink2 leading-none">цена по запросу</span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="кран разобщительный 4200" data-art="4200" data-price="1700">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Кран разобщительный</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">4200</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">1 700 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="шестерня ведомая 9д100.26.015" data-art="9Д100.26.015" data-price="999999999">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Шестерня ведомая</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-ambertint border border-amber/60 text-amberdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">ПОД ЗАКАЗ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">9Д100.26.015</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[15.5px] text-ink2 leading-none">цена по запросу</span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="кран трехходовой (разобщительный) 4326" data-art="4326" data-price="3500">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Кран трёхходовой (разобщительный)</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">4326</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">3 500 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+          <article class="p-card card-lift rounded-lg border border-line bg-paper p-4 sm:p-5 flex flex-col min-w-0" data-cat="tieplovoza" data-name="кран 4309" data-art="4309" data-price="3500">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-disp font-bold text-[15.5px] leading-snug text-ink">Кран</h3>
+              <span class="shrink-0 inline-flex items-center h-6 px-2 rounded bg-oktint border border-ok/40 text-okdeep font-mono font-bold text-[10px] tracking-wide whitespace-nowrap">В НАЛИЧИИ</span>
+            </div>
+            <p class="mt-1.5 font-mono text-[12.5px] text-gray">арт. <span class="font-semibold text-ink2 break-all">4309</span></p>
+            <div class="flex-1" aria-hidden="true"></div>
+            <div class="pt-3.5 border-t border-line mt-3.5">
+              <span class="font-mono font-bold text-[21px] tabular-nums text-ink leading-none whitespace-nowrap">3 500 <span class="text-[15px] text-ink2">₽</span></span>
+              <a href="#rfq" class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full h-11 rounded bg-blue text-white font-extrabold text-[13.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить счёт <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+          </article>
+      <!-- пустой результат поиска/категории → RFQ -->
+      <div id="emptyState" class="hidden col-span-full text-center py-12 px-6 rounded-lg border border-dashed border-line bg-paper2/60">
+        <svg class="w-10 h-10 mx-auto text-gray" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m8 8 6 6"/><path d="m14 8-6 6"/></svg>
+        <p class="mt-4 font-disp font-extrabold text-[19px] sm:text-[20px]">Ничего не найдено в демо-выборке</p>
+        <p class="mt-2 text-[14px] sm:text-[14.5px] text-ink2 leading-relaxed max-w-[56ch] mx-auto">Полный каталог шире — 55+ товарных групп. Пришлите артикул или модель: подберём позицию и счёт с ценой и сроком — в течение рабочего дня.</p>
+        <a href="#rfq" class="mt-5 inline-flex items-center justify-center gap-2 h-11 min-h-[44px] px-6 rounded bg-blue text-white font-extrabold text-[14.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer">Запросить подбор по артикулу<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      </div>
+    </div>
+
+    <!-- визуальная пагинация: как на их листинге (в их категории «дизели» — 14 страниц), в демо не кликается -->
+    <nav class="mt-7 lg:mt-9 flex flex-col sm:flex-row items-center justify-between gap-3" aria-label="Страницы каталога (демо)">
+      <p class="text-[13px] text-gray text-center sm:text-left">Показано <span id="shownCount" class="font-semibold text-ink2">36</span> позиций · демо-выборка из каталога, <span class="whitespace-nowrap">55+ товарных групп</span></p>
+      <div class="flex items-center gap-1.5" aria-hidden="true">
+        <span class="h-11 min-w-[44px] px-3 inline-flex items-center justify-center rounded bg-blue text-white font-mono font-bold text-[13.5px]" title="Демо: единственная страница">1</span>
+        <span class="h-11 min-w-[44px] px-3 inline-flex items-center justify-center rounded border border-line text-gray font-mono font-semibold text-[13.5px]" title="Демо: не кликается">2</span>
+        <span class="h-11 min-w-[44px] px-3 inline-flex items-center justify-center rounded border border-line text-gray font-mono font-semibold text-[13.5px]" title="Демо: не кликается">3</span>
+        <span class="h-11 px-2 inline-flex items-center justify-center text-gray font-mono text-[13.5px]">…</span>
+        <span class="h-11 min-w-[44px] px-3 inline-flex items-center justify-center rounded border border-line text-gray font-mono font-semibold text-[13.5px]" title="Демо: у них в категории «дизели» — 14 страниц">14</span>
+      </div>
+    </nav>
+    <p class="mt-3 text-[11.5px] text-gray text-center sm:text-right">Демо-макет: показана выборка · в рабочей версии — поиск по всему каталогу, фильтры и пагинация</p>
+  </div>
+</section>
+
+<!-- ПОЛОСА RFQ: не нашли позицию → заявка -->
+<section id="rfq" class="bg-paper2 border-b border-line">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <div class="card-lift-soft rounded-lg border border-line bg-paper shadow-[0_8px_30px_rgba(0,0,0,0.16)] px-5 py-5 sm:px-7 sm:py-6 flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">
+      <div class="min-w-0 flex-1">
+        <p class="font-mono text-[11.5px] sm:text-[12.5px] font-semibold tracking-[0.14em] text-blue mb-2">НЕ НАШЛИ ПОЗИЦИЮ?</p>
+        <h2 class="font-disp font-extrabold text-[20px] sm:text-[26px] leading-tight tracking-tight balance">Пришлите заявку — счёт с&nbsp;ценой и сроком в&nbsp;течение рабочего дня</h2>
+        <p class="mt-2 text-[14px] sm:text-[15px] text-ink2 leading-relaxed">Подберём по чертёжному номеру или модели — ТЭМ, ЧМЭ3, ТГМ, Д49/Д50/Д100. Наличие со склада или срок под заказ, ремонт ТНВД и форсунок.</p>
+      </div>
+      <div class="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center lg:items-stretch xl:items-center gap-2.5 lg:gap-3 shrink-0">
+        <a href="tel:+79370290064" class="inline-flex items-center justify-center gap-2 h-11 min-h-[44px] px-5 rounded border-2 border-line font-mono font-bold text-[14.5px] text-bluedeep hover:border-blue hover:text-blue transition-colors duration-200 cursor-pointer" spellcheck="false"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+7 937 029 00 64</a>
+        <a href="mailto:sales@techservice64.ru?subject=Заявка%20на%20запчасти" class="inline-flex items-center justify-center gap-2 h-11 min-h-[44px] px-6 rounded bg-blue text-white font-extrabold text-[14.5px] hover:bg-bluedeep hover:-translate-y-px transition-all duration-200 cursor-pointer whitespace-nowrap">Отправить заявку<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></a>
+      </div>
+    </div>
+    <p class="mt-3 text-[11.5px] text-gray leading-snug">Демо-макет: в рабочей версии — форма заявки со спецификацией и уведомлением на sales@techservice64.ru.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ФУТЕР: контакты + маркировка демо -->
+<footer id="contacts" class="bg-paper">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="min-w-0">
+        <p class="font-disp font-extrabold text-[15px]">ООО «Техсервис» · г. Маркс, Саратовская обл.</p>
+        <p class="mt-1 text-[13px] text-ink2"><a href="mailto:sales@techservice64.ru" class="hover:text-blue transition-colors duration-200 cursor-pointer">sales@techservice64.ru</a> · <a href="tel:+79370290064" class="font-mono font-semibold hover:text-blue transition-colors duration-200 cursor-pointer" spellcheck="false">+7 937 029 00 64</a></p>
+      </div>
+      <p class="text-[13px] text-gray sm:text-right">Запчасти к тепловозам и дизелям.<br>Ремонт ТНВД и форсунок · отгрузка по РФ.</p>
+    </div>
+    <div class="mt-6 pt-4 border-t border-line flex flex-wrap items-center justify-between gap-2">
+      <p class="font-mono text-[11px] text-gray tracking-wider">ДЕМО-МАКЕТ · СТРАНИЦА КАТАЛОГА · НЕ ПУБЛИКАЦИЯ</p>
+      <p class="text-[12px] text-gray">Макет для обсуждения редизайна · 08.10.2026</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* бургер: aria-expanded, Escape, лок-скролла, закрытие по клику и на lg */
+(function(){
+  var btn=document.getElementById('menuBtn'),menu=document.getElementById('mobileMenu');
+  function close(){menu.classList.add('hidden');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+  btn.addEventListener('click',function(){
+    var open=menu.classList.toggle('hidden')===false;
+    btn.setAttribute('aria-expanded',open?'true':'false');
+    document.body.style.overflow=open?'hidden':'';
+  });
+  menu.querySelectorAll('a').forEach(function(a){a.addEventListener('click',close);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+  window.matchMedia('(min-width: 1024px)').addEventListener('change',function(m){if(m.matches)close();});
+})();
+/* каталог: чипы категорий + поиск по артикулу/названию + сортировка (всё на клиенте) */
+(function(){
+  var CATS={
+    all:{h1:'Каталог запчастей',crumb:'Каталог'},
+    disel:{h1:'Запасные части для дизелей',crumb:'Для дизелей'},
+    toplivnaya:{h1:'Топливная аппаратура',crumb:'Топливная аппаратура'},
+    tieplovoza:{h1:'Запчасти для тепловоза',crumb:'Для тепловоза'},
+    el:{h1:'Электро-оборудование',crumb:'Электро-оборудование'}
+  };
+  var cards=[].slice.call(document.querySelectorAll('.p-card'));
+  var chips=[].slice.call(document.querySelectorAll('.chip'));
+  var grid=document.getElementById('catalogGrid');
+  var empty=document.getElementById('emptyState');
+  var input=document.getElementById('tsSearch');
+  var sel=document.getElementById('tsSort');
+  var h1=document.getElementById('catTitle');
+  var count=document.getElementById('catCount');
+  var crumb=document.getElementById('crumbCat');
+  var crumbMid=document.getElementById('crumbMid');
+  var shown=document.getElementById('shownCount');
+  var state={cat:'all',q:'',sort:'name'};
+  function norm(s){return s.toLowerCase().replace(/ё/g,'е');}
+  function plural(n){var a=n%10,b=n%100;return (a===1&&b!==11)?'позиция':(a>=2&&a<=4&&(b<12||b>14))?'позиции':'позиций';}
+  function apply(){
+    var vis=[];
+    cards.forEach(function(c){
+      var okCat=state.cat==='all'||c.getAttribute('data-cat')===state.cat;
+      var okQ=!state.q||c.getAttribute('data-name').indexOf(state.q)!==-1;
+      var show=okCat&&okQ;
+      c.classList.toggle('p-hide',!show);
+      if(show)vis.push(c);
+    });
+    if(state.sort==='asc'||state.sort==='desc'){
+      /* «цена по запросу» — всегда в конце, независимо от направления */
+      var nvis=vis.filter(function(c){return +c.getAttribute('data-price')<999999999;});
+      var qvis=vis.filter(function(c){return +c.getAttribute('data-price')>=999999999;});
+      nvis.sort(function(x,y){var px=+x.getAttribute('data-price'),py=+y.getAttribute('data-price');return state.sort==='asc'?px-py:py-px;});
+      vis=nvis.concat(qvis);
+    }
+    else{vis.sort(function(x,y){return x.getAttribute('data-name').localeCompare(y.getAttribute('data-name'),'ru');});}
+    vis.forEach(function(c){grid.insertBefore(c,empty);});
+    empty.classList.toggle('hidden',vis.length>0);
+    chips.forEach(function(ch){
+      var on=ch.getAttribute('data-cat')===state.cat;
+      ch.classList.toggle('chip-on',on);
+      ch.setAttribute('aria-pressed',on?'true':'false');
+    });
+    h1.textContent=CATS[state.cat].h1;
+    crumb.textContent=CATS[state.cat].crumb;
+    crumbMid.classList.toggle('p-hide',state.cat==='all');
+    count.textContent=state.q
+      ? 'Найдено: '+vis.length+' из '+cards.length+' · цены из каталога'
+      : vis.length+' '+plural(vis.length)+' · цены из каталога';
+    shown.textContent=String(vis.length);
+  }
+  chips.forEach(function(ch){ch.addEventListener('click',function(){state.cat=ch.getAttribute('data-cat');state.q='';input.value='';apply();});});
+  input.addEventListener('input',function(){state.q=norm(input.value.trim());apply();});
+  sel.addEventListener('change',function(){state.sort=sel.value;apply();});
+  apply();
+})();
+</script>
+</body>
+</html>
